@@ -47,6 +47,7 @@ def main_menu():
 
 def end_of_options():
     print("You have exhausted all options.  Returning to previous page.")
+
 def zip_sql(zip_code, month="%%", year="____"):
     sql = ( "SELECT cc.TIMEID, cc.TRANSACTION_VALUE, cc.TRANSACTION_TYPE, cc.CUST_CC_NO, "
             "c.FIRST_NAME, c.LAST_NAME,  cc.BRANCH_CODE, cc.TRANSACTION_ID "
@@ -150,10 +151,7 @@ def zipcode_results(zip_code):
                 else:
                     error_raised = 1
                     print("\033[31mERROR\033[0m You have made an invalid selection. Only 2018 is valid.")
-                    print("")
-
-
-                error_raised = 0
+                    print("") 
                 continue
             elif choice == "4":
                 error_raised = 0
