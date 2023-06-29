@@ -11,3 +11,4 @@ c.FIRST_NAME, c.LAST_NAME,  cc.BRANCH_CODE, cc.TRANSACTION_ID
 FROM cdw_sapp_credit_card cc 
 INNER JOIN cdw_sapp_customer c ON cc.CUST_SSN = c.SSN
 WHERE c.CUST_ZIP = 17201
+ORDER BY cc.TIMEID DESC
