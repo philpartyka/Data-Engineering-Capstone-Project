@@ -39,7 +39,7 @@ def main_menu():
     print("\033[33m3\033[0m Filter by States of Branches")
     print(" ")
     print("\033[4mCustomer Details\033[0m")
-    print("\033[33m4\033[0m Check account details of a customer")
+    print("\033[33m4\033[0m Check account details of an individual customer")
     print("\033[33m5\033[0m Modify customer account details")
     print("\033[33m6\033[0m Generate monthly statement for a credit card")
     print("\033[33m6\033[0m Display total transactions between two dates from an individual")
@@ -311,9 +311,147 @@ def run_branch_filter():
                 print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
                 print("")
 
+def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=None):
+    # I will alter the sql query based on which search parameter is supplied.  Only one param
+    # is supplied at a time so the rest will be None by default.
+    if ssn:
+        search_param = f"WHERE SSN = {ssn}"
+    elif cc_num:
+        search_param = f"WHERE Credit_card_no = {cc_num}"
+    elif l_name:
+        search_param = f"WHERE LAST_NAME = {l_name}"
+    elif cust_state:
+        search_param = f"WHERE CUST_STATE = {cust_state}"
+    elif zip_code:
+        search_param = f"WHERE CUST_ZIP = {zip_code}"
+
+    cust_details_sql = ("SELECT * "
+                        "FROM cdw_sapp_customer "
+                        f"{search_param}")
+    cursor.execute(cust_details_sql)    #cursor was assigned in the connect_sql() function
+    result = cursor.fetchall()          #fetches all the results
+    
+    # if the ssn isn't in the records I want to terminate the lookup and the display
+    # procedure so we will return 0 and then handle the 0 value in zipcode_results()
+    if len(result) == 0:
+        return 0
+    
+    cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
+                                   "City","State","Country","Zip Code","Phone Num","Email"])
+    for i in result:
+        #had to slice the row to omit the 13th column from being added
+        cust_details_tb.add_row(i[:12])
+    
+    return cust_details_tb
+
+
+def run_cust_details():
+    while True:
+        print("")
+        print("\033[4mIndividual Customer Details\033[0m")
+        instructions()
+        print("Possible selections are highlighted in yellow.")
+        print("")
+
+        # if full_results_shown == 0 and error_raised == 0:
+        #     print("\033[33m1\033[0m View full results")
+        # else:
+        #     print("\033[30m1 View full results\033[0m")
+
+        print("\033[33m1\033[0m Search by SSN")
+        print("\033[33m2\033[0m Search by last four digits of CC No.")
+        print("\033[33m3\033[0m Search by Last Name")
+        print("\033[33m4\033[0m Search by State")
+        print("\033[33m5\033[0m Search by Zip Code")
+        print(" ")
+        cust_choice = input("Your selection: ")
+
+        if cust_choice == "exit":
+            error_raised = 0
+            print("Returning to previous page")
+            break
+        elif cust_choice == "1":
+            while True:
+                ssn_input = input("Please enter the customer's SSN: ")
+                # We need to put the exit break statement here because we are eliminating non digit chars in the next step
+                if ssn_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                ssn_input = re.sub(r"\D", "", ssn_input)
+                # need to convert to int because the ssn column in mysql is stored as an int
+                ssn_input = int(ssn_input)
+                
+                #need to convert ssn_input to a string because int doesnt have a length function
+                if len(str(ssn_input)) == 9:
+                    if cust_details_sql(ssn=ssn_input) == 0:
+                        print("There is no customer with the given SSN.")
+                        print("")
+                    else:
+                        print(cust_details_sql(ssn=ssn_input))
+                else:
+                    print("\033[31mERROR\033[0m You have made an invalid selection.  Remember SSNs have 9 digits.")
+                    print("")
 
 
 
+
+
+
+
+            error_raised = 0
+            full_results_shown = 1
+            continue
+        elif cust_choice == "2":
+            while True:
+                month = input("Please enter the month's number (1-12): ")
+                # Regex pattern: "^(0?[1-9]|1[0-2])$".  We need ^ to indicate that we are looking for 
+                # the pattern at the start of a string, not in the middle of it.  Similar reason for the $ 
+                # but for the end of the string.  0?[1-9] matches a single digit from 1-9 with an optional
+                # leading zero.  | is an OR operator.  1[0-2] matches 10, 11, or 12.
+                if bool(re.match(r"^(0?[1-9]|1[0-2])$", month)):
+                    month = month.rjust(2,"0")  #padding a leading zero if single digit
+                    print(zip_sql(zip_code, month))
+                    # changing full_results_shown to 1 because results will be fully shown automatically
+                    error_raised = 0
+                    full_results_shown = 1
+                elif month == "exit":
+                    print("Returning to previous page")
+                    print("")
+                    break
+                else:
+                    error_raised = 1
+                    print("\033[31mERROR\033[0m You have made an invalid selection. 1-12 or 01-09 are valid.")
+                    print("")
+            continue
+        elif cust_choice == "3":
+            while True:
+                year = input("Please enter the year (YYYY).  Hint: only 2018 data is available: ")
+                if year == "2018":
+                    print(zip_sql(zip_code, year=year))
+                    # changing full_results_shown to 1 because results will be fully shown automatically
+                    error_raised = 0
+                    full_results_shown = 1
+                elif year == "exit":
+                    print("Returning to previous page")
+                    print("")
+                    break
+                else:
+                    error_raised = 1
+                    print("\033[31mERROR\033[0m You have made an invalid selection. Only 2018 is valid.")
+                    print("") 
+            continue
+        elif cust_choice == "4":
+            error_raised = 0
+            break
+        elif cust_choice == "5":
+            error_raised = 0
+            break
+        else:
+            error_raised = 1
+            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
+            print("")
 
 
 def run_choice(choice):
@@ -323,6 +461,9 @@ def run_choice(choice):
         run_type_filter()
     elif choice == "3":
         run_branch_filter()
+    elif choice == "4":
+        run_cust_details()
+    
     
 
 def app():
@@ -336,6 +477,9 @@ def app():
         if choice == "exit":
             print("Closing program.  Come back next time.")
             break
+        else:
+            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
+            print("")
 
 
 connect_sql()
