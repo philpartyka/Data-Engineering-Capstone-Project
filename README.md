@@ -2,10 +2,23 @@
 This is a capstone project for the Data Engineering course offered by Per Scholas.
 
 
+requirements:
+
+pip install mysql-connector-python
+pip install prettytable
+
+credential file has to be updated with user's mysql details
+
+
+
+
+
+
 To Do List:
 
 MUST
 -pretty table is dropping leading 0s from zip codes
+-can i upload credentials file but scramble the login details
 
 
 IF I HAVE TIME

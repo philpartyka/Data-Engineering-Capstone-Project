@@ -32,5 +32,5 @@ WHERE b.BRANCH_STATE = "NY"
 GROUP BY b.BRANCH_STATE;
 
 SELECT * 
-FROM cdw_sapp_customer;
-WHERE SSN = all;
+FROM cdw_sapp_customer
+WHERE CUST_ZIP = 11803;

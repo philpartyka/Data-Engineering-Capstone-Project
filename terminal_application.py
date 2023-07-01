@@ -288,6 +288,7 @@ def run_branch_filter():
 
             if branch_choice == "exit":
                 print("Returning to previous page")
+                print("")
                 break
             elif branch_choice == "1" and branch_full_results_shown == 0:
                 print(branch_full_table())
@@ -298,11 +299,13 @@ def run_branch_filter():
                     state_choice = input("Please enter a state abbreviation: ")
                     
                     if bool(re.match(r"^[A-Za-z]{2}$", state_choice)):
-                        if branch_state_table(state_choice) == 0:
+                        #assigning to variable so I dont run query twice
+                        state_results = branch_state_table(state_choice)
+                        if state_results == 0:
                             print("Sorry there are no branches in that state.")
                             continue
                         else:
-                            print(branch_state_table(state_choice))
+                            print(state_results)
                     elif state_choice == 'exit':
                         break
                     else:
@@ -317,11 +320,11 @@ def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=N
     if ssn:
         search_param = f"WHERE SSN = {ssn}"
     elif cc_num:
-        search_param = f"WHERE Credit_card_no = {cc_num}"
+        search_param = f"WHERE Credit_card_no LIKE '____________{cc_num}'"
     elif l_name:
-        search_param = f"WHERE LAST_NAME = {l_name}"
+        search_param = f"WHERE LAST_NAME = '{l_name}'"
     elif cust_state:
-        search_param = f"WHERE CUST_STATE = {cust_state}"
+        search_param = f"WHERE CUST_STATE = '{cust_state}'"
     elif zip_code:
         search_param = f"WHERE CUST_ZIP = {zip_code}"
 
@@ -343,7 +346,6 @@ def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=N
         cust_details_tb.add_row(i[:12])
     
     return cust_details_tb
-
 
 def run_cust_details():
     while True:
@@ -367,8 +369,8 @@ def run_cust_details():
         cust_choice = input("Your selection: ")
 
         if cust_choice == "exit":
-            error_raised = 0
             print("Returning to previous page")
+            print("")
             break
         elif cust_choice == "1":
             while True:
@@ -380,22 +382,95 @@ def run_cust_details():
                 # below replaces any non digit characters (\D) with an empty string ""
                 # essentially removing non digit chars
                 ssn_input = re.sub(r"\D", "", ssn_input)
-                # need to convert to int because the ssn column in mysql is stored as an int
-                ssn_input = int(ssn_input)
                 
                 #need to convert ssn_input to a string because int doesnt have a length function
                 if len(str(ssn_input)) == 9:
-                    if cust_details_sql(ssn=ssn_input) == 0:
+                    #saving the sql query to a variable so we dont have to run it twice
+                    ssn_results = cust_details_sql(ssn=ssn_input)
+                    if ssn_results == 0:
                         print("There is no customer with the given SSN.")
                         print("")
                     else:
-                        print(cust_details_sql(ssn=ssn_input))
+                        print(ssn_results)
                 else:
                     print("\033[31mERROR\033[0m You have made an invalid selection.  Remember SSNs have 9 digits.")
                     print("")
+        elif cust_choice == "2":
+            while True:
+                cc_input = input("Please enter the last four digits of the CC number: ")
+                # We need to put the exit break statement here because we are eliminating non digit chars in the next step
+                if cc_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                cc_input = re.sub(r"\D", "", cc_input)
+                
+                #need to convert ssn_input to a string because int doesnt have a length function
+                if len(str(cc_input)) == 4:
+                    #saving the sql query to a variable so we dont have to run it twice
+                    cust_results = cust_details_sql(cc_num=cc_input)
+                    if cust_results == 0:
+                        print("There is no customer with the given last four CC digits.")
+                        print("")
+                    else:
+                        print(cust_results)
+                else:
+                    print("\033[31mERROR\033[0m You have made an invalid selection.  Remember to only enter the last 4 digits.")
+                    print("")
+        elif cust_choice == "3":
+            while True:
+                name_input = input("Please enter the customer's last name: ")
+                name_results = cust_details_sql(l_name=name_input)
+                
+                if name_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif name_results != 0:
+                    print(name_results)
+                else:
+                    print("\033[31mERROR\033[0m You have made an invalid selection or there are no such customers.")
+                    print("")
+        elif cust_choice == "4":
+            while True:
+                state_input = input("Please enter the State (2 letter abbreviation): ")
 
-
-
+                if bool(re.match(r"^[A-Za-z]{2}$", state_input)):
+                    state_results = cust_details_sql(cust_state = state_input)
+                    if state_results == 0:
+                        print("Sorry there are no customers in that state.")
+                        continue
+                    else:
+                        print(state_results)
+                elif state_input == "exit":
+                    print("Returning to previous page")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have made an invalid selection.  Remember to only enter two letters.")
+                    print("")
+        elif cust_choice == "5":
+            while True:
+                zip_input = input("Please enter the customer's zip code: ")
+                # We need to put the exit break statement here because we are eliminating non digit chars in the next step
+                if zip_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                zip_input = re.sub(r"\D", "", zip_input)
+                
+                #need to convert zip_input to a string because int doesnt have a length function
+                if len(str(zip_input)) == 5:
+                    #saving the sql query to a variable so we dont have to run it twice
+                    zip_results = cust_details_sql(zip_code=zip_input)
+                    if zip_results == 0:
+                        print("There is no customer in that zip code.")
+                        print("")
+                    else:
+                        print(zip_results)
+                else:
+                    print("\033[31mERROR\033[0m You have made an invalid selection.  Remember zip codes have 9 digits.")
+                    print("")
 
 
 
@@ -403,55 +478,8 @@ def run_cust_details():
             error_raised = 0
             full_results_shown = 1
             continue
-        elif cust_choice == "2":
-            while True:
-                month = input("Please enter the month's number (1-12): ")
-                # Regex pattern: "^(0?[1-9]|1[0-2])$".  We need ^ to indicate that we are looking for 
-                # the pattern at the start of a string, not in the middle of it.  Similar reason for the $ 
-                # but for the end of the string.  0?[1-9] matches a single digit from 1-9 with an optional
-                # leading zero.  | is an OR operator.  1[0-2] matches 10, 11, or 12.
-                if bool(re.match(r"^(0?[1-9]|1[0-2])$", month)):
-                    month = month.rjust(2,"0")  #padding a leading zero if single digit
-                    print(zip_sql(zip_code, month))
-                    # changing full_results_shown to 1 because results will be fully shown automatically
-                    error_raised = 0
-                    full_results_shown = 1
-                elif month == "exit":
-                    print("Returning to previous page")
-                    print("")
-                    break
-                else:
-                    error_raised = 1
-                    print("\033[31mERROR\033[0m You have made an invalid selection. 1-12 or 01-09 are valid.")
-                    print("")
-            continue
-        elif cust_choice == "3":
-            while True:
-                year = input("Please enter the year (YYYY).  Hint: only 2018 data is available: ")
-                if year == "2018":
-                    print(zip_sql(zip_code, year=year))
-                    # changing full_results_shown to 1 because results will be fully shown automatically
-                    error_raised = 0
-                    full_results_shown = 1
-                elif year == "exit":
-                    print("Returning to previous page")
-                    print("")
-                    break
-                else:
-                    error_raised = 1
-                    print("\033[31mERROR\033[0m You have made an invalid selection. Only 2018 is valid.")
-                    print("") 
-            continue
-        elif cust_choice == "4":
-            error_raised = 0
-            break
-        elif cust_choice == "5":
-            error_raised = 0
-            break
         else:
-            error_raised = 1
             print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
-            print("")
 
 
 def run_choice(choice):
@@ -463,7 +491,9 @@ def run_choice(choice):
         run_branch_filter()
     elif choice == "4":
         run_cust_details()
-    
+    else:
+        print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
+        print("")
     
 
 def app():
@@ -477,9 +507,9 @@ def app():
         if choice == "exit":
             print("Closing program.  Come back next time.")
             break
-        else:
-            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
-            print("")
+        
+            
+        
 
 
 connect_sql()
