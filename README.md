@@ -10,3 +10,4 @@ MUST
 
 IF I HAVE TIME
 -consider adding filters like month to the transaction type filter view
+-change format to pages.  have the pages have a common structure and refer to each page by its name/variable like page_zip_menu
