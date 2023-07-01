@@ -347,18 +347,20 @@ def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=N
     
     return cust_details_tb
 
-def run_cust_details():
+def run_cust_details(modify=False):
     while True:
         print("")
-        print("\033[4mIndividual Customer Details\033[0m")
+        # I am using this same function in run_modify_cust_details() but I don't 
+        # want to change the title and instructions when its in that function
+        if modify == False:
+            print("\033[4mIndividual Customer Details\033[0m")
+        else:
+            print("\033[4mModify Customer Details\033[0m")
+            print("Please choose a customer to modify.  Search for the customer via one of the methods below.")
+            print("")
         instructions()
         print("Possible selections are highlighted in yellow.")
         print("")
-
-        # if full_results_shown == 0 and error_raised == 0:
-        #     print("\033[33m1\033[0m View full results")
-        # else:
-        #     print("\033[30m1 View full results\033[0m")
 
         print("\033[33m1\033[0m Search by SSN")
         print("\033[33m2\033[0m Search by last four digits of CC No.")
@@ -367,10 +369,17 @@ def run_cust_details():
         print("\033[33m5\033[0m Search by Zip Code")
         print(" ")
         cust_choice = input("Your selection: ")
+        
+        # need to make this variable global for the modify function to be able to use it
+        global return_results
+        global exit_from_cust_details
+        exit_from_cust_details = 0
+        break_from_function = 0
 
         if cust_choice == "exit":
             print("Returning to previous page")
             print("")
+            exit_from_cust_details = 1
             break
         elif cust_choice == "1":
             while True:
@@ -392,6 +401,19 @@ def run_cust_details():
                         print("")
                     else:
                         print(ssn_results)
+                        # when running in the modify customers page we want to export the results table 
+                        # to be used in that function.  Also we want to make sure its only the record of a
+                        # single customer and not more than 1
+                        if modify == True:
+                            # We need to check if the results have more than 1 customer.  It's an ugly solution
+                            # but ssn_results[1:][0] returns an error when there is only 1 result
+                            try: 
+                                ssn_results[1:][0]
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                            except:
+                                return_results = ssn_results
+                                break_from_function = 1
+                                break
                 else:
                     print("\033[31mERROR\033[0m You have made an invalid selection.  Remember SSNs have 9 digits.")
                     print("")
@@ -415,6 +437,19 @@ def run_cust_details():
                         print("")
                     else:
                         print(cust_results)
+                        # when running in the modify customers page we want to export the results table 
+                        # to be used in that function.  Also we want to make sure its only the record of a
+                        # single customer and not more than 1
+                        if modify == True:
+                            # We need to check if the results have more than 1 customer.  It's an ugly solution
+                            # but cust_results[1:][0] returns an error when there is only 1 result
+                            try: 
+                                cust_results[1:][0]
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                            except:
+                                return_results = cust_results
+                                break_from_function = 1
+                                break
                 else:
                     print("\033[31mERROR\033[0m You have made an invalid selection.  Remember to only enter the last 4 digits.")
                     print("")
@@ -428,6 +463,19 @@ def run_cust_details():
                     break
                 elif name_results != 0:
                     print(name_results)
+                    # when running in the modify customers page we want to export the results table 
+                    # to be used in that function.  Also we want to make sure its only the record of a
+                    # single customer and not more than 1
+                    if modify == True:
+                        # We need to check if the results have more than 1 customer.  It's an ugly solution
+                        # but name_results[1:][0] returns an error when there is only 1 result
+                        try: 
+                            name_results[1:][0]
+                            print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                        except:
+                            return_results = name_results
+                            break_from_function = 1
+                            break
                 else:
                     print("\033[31mERROR\033[0m You have made an invalid selection or there are no such customers.")
                     print("")
@@ -442,6 +490,19 @@ def run_cust_details():
                         continue
                     else:
                         print(state_results)
+                        # when running in the modify customers page we want to export the results table 
+                        # to be used in that function.  Also we want to make sure its only the record of a
+                        # single customer and not more than 1
+                        if modify == True:
+                            # We need to check if the results have more than 1 customer.  It's an ugly solution
+                            # but state_results[1:][0] returns an error when there is only 1 result
+                            try: 
+                                state_results[1:][0]
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer. You can only modify one customer at a time.")
+                            except:
+                                return_results = state_results
+                                break_from_function = 1
+                                break
                 elif state_input == "exit":
                     print("Returning to previous page")
                     break
@@ -468,6 +529,19 @@ def run_cust_details():
                         print("")
                     else:
                         print(zip_results)
+                        # when running in the modify customers page we want to export the results table 
+                        # to be used in that function.  Also we want to make sure its only the record of a
+                        # single customer and not more than 1
+                        if modify == True:
+                            # We need to check if the results have more than 1 customer.  It's an ugly solution
+                            # but zip_results[1:][0] returns an error when there is only 1 result
+                            try: 
+                                zip_results[1:][0]
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                            except:
+                                return_results = zip_results
+                                break_from_function = 1
+                                break
                 else:
                     print("\033[31mERROR\033[0m You have made an invalid selection.  Remember zip codes have 9 digits.")
                     print("")
@@ -480,8 +554,29 @@ def run_cust_details():
             continue
         else:
             print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
+        # if we are running this in the modify customers function we want to break from this while loop
+        # and reset the break_from_function variable in case this function is run again.
+        if break_from_function == 1:
+            break_from_function = 0
+            break        
+        
+def run_modify_cust_details():
+    while True:
+        run_cust_details(modify=True)
 
-
+        # checks if we backed out of the cust details search, so we can break this loop as well
+        # for some reason i can't put exit_from_cust_details in the if conditional. 
+        exit_check = exit_from_cust_details
+        if exit_check == 1:
+            break
+            
+        print(return_results)
+        print("success")
+    
+    
+    
+    
+    
 def run_choice(choice):
     if choice == "1":
         run_zipcode_search()
@@ -491,6 +586,8 @@ def run_choice(choice):
         run_branch_filter()
     elif choice == "4":
         run_cust_details()
+    elif choice == "5":
+        run_modify_cust_details()
     else:
         print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
         print("")
