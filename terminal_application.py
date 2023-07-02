@@ -1,4 +1,5 @@
 import re
+import json
 import mysql.connector as msql
 from mysql.connector import Error
 from prettytable import PrettyTable
@@ -42,7 +43,7 @@ def main_menu():
     print("\033[33m4\033[0m Check account details of an individual customer")
     print("\033[33m5\033[0m Modify customer account details")
     print("\033[33m6\033[0m Generate monthly statement for a credit card")
-    print("\033[33m6\033[0m Display total transactions between two dates from an individual")
+    print("\033[33m7\033[0m Display total transactions between two dates from an individual")
     print("")
 
 def end_of_options():
@@ -559,20 +560,413 @@ def run_cust_details(modify=False):
         if break_from_function == 1:
             break_from_function = 0
             break        
-        
-def run_modify_cust_details():
-    while True:
-        run_cust_details(modify=True)
 
+def cust_update_sql(cust_ssn, col, new_val):
+    try:
+        # setting it this way is advised to prevent sql injection attacks. 
+        params = (new_val, cust_ssn)
+        cust_modify_sql =  f"UPDATE cdw_sapp_customer SET {col} = %s WHERE SSN = %s" 
+        
+        cursor.execute(cust_modify_sql, params) #cursor was assigned in the connect_sql() function
+        conn.commit()
+        
+        # fetching the results of the updated customer details.  we will be passing the 
+        # PK cust_ssn.  but if cust_ssn was changed in the previous step then we will be passing
+        # in the new ssn
+        if col == 'SSN':
+            show_changes_sql = f"SELECT * FROM cdw_sapp_customer WHERE SSN = {new_val}"
+        else:
+            show_changes_sql = f"SELECT * FROM cdw_sapp_customer WHERE SSN = {cust_ssn}"
+        
+        cursor.execute(show_changes_sql)
+        result = cursor.fetchall()          #fetches the results
+        
+        cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
+                                    "City","State","Country","Zip Code","Phone Num","Email"])
+        for i in result:
+            #had to slice the row to omit the 13th column from being added
+            cust_details_tb.add_row(i[:12])
+        
+        return cust_details_tb
+    except msql.Error as error:
+        return f"\033[31mERROR\033[0m Failed to update table record: {error}"
+         
+def run_modify_cust_details():
+    # run the same cust details function but with slight tweaks catered to this function
+    run_cust_details(modify=True)
+    # We need to isolate the SSN so we can use it to lookup customers when updating their
+    # records.  To achieve this we use the json library to convert the prettytable
+    # to a json string(its actually a list) and then we extract the dict in that list.  
+    # The first item in that dict is the SSN value.
+    json_data = json.loads(return_results.get_json_string())
+    cust_dict = json_data[1]
+    cust_ssn = cust_dict['SSN']
+    
+    while True:
         # checks if we backed out of the cust details search, so we can break this loop as well
-        # for some reason i can't put exit_from_cust_details in the if conditional. 
+        # for some reason i can't put exit_from_cust_details directly in the if conditional. 
         exit_check = exit_from_cust_details
         if exit_check == 1:
+            break 
+                       
+        print("Which field would you like to modify?")
+        print("")
+        instructions()
+        print("Possible selections are highlighted in yellow.")
+        print("")
+
+        print("\033[33m1\033[0m SSN")
+        print("\033[33m2\033[0m First Name")
+        print("\033[33m3\033[0m Middle Name")
+        print("\033[33m4\033[0m Last Name")
+        print("\033[33m5\033[0m Credit Card Number")
+        print("\033[33m6\033[0m Street Address")
+        print("\033[33m7\033[0m City")
+        print("\033[33m8\033[0m State")
+        print("\033[33m9\033[0m Country")
+        print("\033[33m10\033[0m Zip Code")
+        print("\033[33m11\033[0m Phone")
+        print("\033[33m12\033[0m Email")
+        print(" ")
+        modify_choice = input("Your selection: ")
+        
+        if modify_choice == "exit":
+            print("Returning to previous page")
+            print("")
             break
-            
-        print(return_results)
-        print("success")
-    
+        elif modify_choice == "1":
+            while True:
+                ssn_input = input("Change SSN to: ")
+                
+                if ssn_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                ssn_input = re.sub(r"\D", "", ssn_input)
+                
+                # need to convert ssn_input to a string because int doesnt have a length function
+                if len(str(ssn_input)) == 9:
+                    update_results = cust_update_sql(cust_ssn,'SSN', ssn_input)
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    # Need to update cust_ssn because the old value we were working with has
+                    # been changed.  Need to point to the new value if user wants to update details
+                    # for the same customer
+                    cust_ssn = ssn_input
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid SSN.  Remember SSNs have 9 digits.")
+                    print("")
+        elif modify_choice == "2":
+            while True:
+                f_name_input = input("Change First Name to: ")
+                
+                if f_name_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif f_name_input != 'exit':
+                    # .title() is needed to convert the given string to Title Case
+                    update_results = cust_update_sql(cust_ssn,'FIRST_NAME', f_name_input.title())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("")    
+        elif modify_choice == "3":
+            while True:
+                m_name_input = input("Change Middle Name to: ")
+                
+                if m_name_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif m_name_input != 'exit':
+                    # .lower() is needed to convert the given string to lower Case
+                    update_results = cust_update_sql(cust_ssn,'MIDDLE_NAME', m_name_input.lower())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("") 
+        elif modify_choice == "4":
+            while True:
+                l_name_input = input("Change Last Name to: ")
+                
+                if l_name_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif l_name_input != 'exit':
+                    # .title() is needed to convert the given string to Title Case
+                    update_results = cust_update_sql(cust_ssn,'LAST_NAME', l_name_input.title())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("")
+        elif modify_choice == "5":
+            while True:
+                cc_input = input("Change Credit Card Number to: ")
+                
+                if cc_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                cc_input = re.sub(r"\D", "", cc_input)
+                
+                # need to convert cc_input to a string because int doesnt have a length function
+                if len(str(cc_input)) == 16:
+                    update_results = cust_update_sql(cust_ssn,'Credit_card_no', cc_input)
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid CC Num.  Remember CC Nums have 16 digits.")
+                    print("") 
+        elif modify_choice == "6":
+            while True:
+                add_input = input("Change Street Address to: ")
+                
+                if add_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif add_input != 'exit':
+                    # .title() to make it title case
+                    update_results = cust_update_sql(cust_ssn,'FULL_STREET_ADDRESS', add_input.title())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("")
+        elif modify_choice == "7":
+            while True:
+                city_input = input("Change City to: ")
+                
+                if city_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif city_input != 'exit':
+                    # .title() is needed to convert the given string to Title Case
+                    update_results = cust_update_sql(cust_ssn,'CUST_CITY', city_input.title())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("")
+        elif modify_choice == "8":
+            while True:
+                state_input = input("Change State to: ")
+                
+                if state_input == "exit":
+                    print("Returning to previous page")
+                    break
+                
+                if len(state_input) == 2:
+                    # .upper() to convert to capital letters
+                    update_results = cust_update_sql(cust_ssn,'CUST_STATE', state_input.upper())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid State.  Remember States have 2 letters.")
+                    print("")
+        elif modify_choice == "9":
+            while True:
+                ctry_input = input("Change Country to: ")
+                
+                if ctry_input == "exit":
+                    print("Returning to previous page")
+                    break
+                elif ctry_input != 'exit':
+                    # .title() is needed to convert the given string to Title Case
+                    update_results = cust_update_sql(cust_ssn,'CUST_COUNTRY', ctry_input.title())
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid selection.  I honestly don't know how.")
+                    print("") 
+        elif modify_choice == "10":
+            while True:
+                zip_input = input("Change Zip Code to: ")
+                
+                if zip_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                zip_input = re.sub(r"\D", "", zip_input)
+                
+                # need to convert zip_input to a string because int doesnt have a length function
+                if len(str(zip_input)) == 5:
+                    update_results = cust_update_sql(cust_ssn,'CUST_ZIP', zip_input)
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid zip code.  Remember zip codes have 5 digits.")
+                    print("") 
+        elif modify_choice == "11":
+            while True:
+                phone_input = input("Change Phone Number to: ")
+                
+                if phone_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                phone_input = re.sub(r"\D", "", phone_input)
+                
+                # need to convert phone_input to a string because int doesnt have a length function
+                if len(str(phone_input)) == 10:
+                    # change the number to match the format in the db
+                    phone_input = f"({phone_input[:3]}){phone_input[3:6]}-{phone_input[6:]}"
+                    update_results = cust_update_sql(cust_ssn,'CUST_PHONE', phone_input)
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid phone num.  Remember phone nums have 10 digits.")
+                    print("")
+        elif modify_choice == "12":
+            while True:
+                email_input = input("Change Email Address to: ")
+                
+                if email_input == "exit":
+                    print("Returning to previous page")
+                    break
+                #^\S+@\S+\.\S+$ checks to see if the string is a valid email address.  the "^\S+" checks
+                #if there are one or more non-whitespace characters at the start of the string.  Can't have
+                #blank spaces in an email address. The ^ is necessary because "ex ample@example.com" would be
+                #a match on "ample@example.com".  We check for "@" with one or more non-whitespace character after it
+                #followed by a "." (\. needs to be used because just a "." in regex matches to any single character).
+                #Finished off by "\S+$" which matches one or more non-whitespace characters that end the string.  
+                #The "$" is necessary for the same reason that the "^" is necessary.  The "~" is like a NOT so only
+                #the non matches will be shown.
+                elif bool(re.match(r'^\S+@\S+\.\S+$', email_input)):
+                    update_results = cust_update_sql(cust_ssn,'CUST_EMAIL', email_input)
+                    # checks if the function output is a string, aka error message, then it will
+                    # have this function start back at the top
+                    if isinstance(update_results, str):
+                        print(update_results)
+                        print("")
+                        continue
+                    else:
+                        print(update_results)
+                        
+                    print("Successfully executed")
+                    print("")
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid email.  Please try again.")
+                    print("")     
+        else:
+            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")  
+            print("")              
     
     
     
