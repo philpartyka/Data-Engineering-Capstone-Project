@@ -1138,6 +1138,31 @@ def run_gen_monthly_statement():
             print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")  
             print("")
 
+def time_preiod_sql(cc_num, start_time, end_time):
+    try:
+        # need to make sure the end_time is larger than the start_time or else the query won't return anything
+        if end_time < start_time:
+            old_start_time = start_time
+            start_time = end_time
+            end_time = old_start_time
+            
+        params = [cc_num, start_time, end_time]
+        time_between_sql = ("SELECT TRANSACTION_ID, TIMEID, TRANSACTION_TYPE, TRANSACTION_VALUE " 
+                            "FROM cdw_sapp_credit_card "  
+                            "WHERE CUST_CC_NO = %s AND TIMEID BETWEEN %s AND %s "
+                            "ORDER BY TIMEID DESC;")
+        cursor.execute(time_between_sql,(params))    #cursor was assigned in the connect_sql() function
+        result = cursor.fetchall()                   #fetches all the results
+        
+        time_period_results_tb = PrettyTable(["Trans ID","Time (YYYYMMDD)","Type","Amount"])
+        for i in result:
+            #had to slice the row to omit the 13th column from being added
+            time_period_results_tb.add_row(i)
+        
+        return time_period_results_tb
+    except msql.Error as error:
+        return f"\033[31mERROR\033[0m Failed to retrieve records: {error}"
+    
 def run_trans_in_period():
     while True:
         print("")
@@ -1206,6 +1231,18 @@ def run_trans_in_period():
                         print("There is no customer with the given SSN.")
                         print("")
                         continue
+                    
+                    # We need to isolate the CC num so we can use it to lookup customers 
+                    # To achieve this we use the json library to convert the prettytable
+                    # to a json string(its actually a list) and then we extract the dict in that list.  
+                    # I needed to remove the Last Updated column because the timestamp data type couldn't
+                    # be serialized in json
+                    ssn_cust_details.del_column('Last Updated')
+                    json_data = json.loads(ssn_cust_details.get_json_string())
+                    cust_dict = json_data[1]
+                    cust_cc = cust_dict['CC Num']   
+                    print(f"Proceeding with Credit Card Number: {cust_cc}")
+                    print("")
                     break
                 else:
                     print("\033[31mERROR\033[0m You have entered an invalid SSN.  Remember SSNs have 9 digits.")
@@ -1237,13 +1274,42 @@ def run_trans_in_period():
             print("")
             continue
         
-        time1 = input("Please enter the start date in YYYYMMDD format: ") 
-        
-        if time1 == 'exit':
-            print("Returning to previous page")
-            print("")
-            continue    
+        while True:
+            time1 = input("Please enter start date (YYYYMMDD): ") 
             
+            if time1 == 'exit':
+                print("Returning to previous page")
+                print("")
+                break
+            # need to convert to a string because int doesnt have a length function
+            elif len(str(time1)) != 8:
+                print("\033[31mERROR\033[0m You have entered an invalid date.  Remember to enter only 8 digits")
+                print("")
+            else:
+                while True:   
+                    time2 = input("Please enter end date (YYYYMMDD): ") 
+            
+                    if time2 == 'exit':
+                        print("Returning to previous page")
+                        print("")
+                        break
+                    # need to convert to a string because int doesnt have a length function
+                    elif len(str(time2)) != 8:
+                        print("\033[31mERROR\033[0m You have entered an invalid date.  Remember to enter only 8 digits")
+                        print("")
+                    else:
+                        time_results = time_preiod_sql(cust_cc,time1,time2)
+                        # checks if the function output is a string, aka error message, then it will
+                        # have this function start back at the top
+                        if isinstance(time_results, str):
+                            print(time_results)
+                            print("")
+                        else:
+                            print(time_preiod_sql(cust_cc,time1,time2))
+                    
+                    break
+                break
+                        
             
         
     

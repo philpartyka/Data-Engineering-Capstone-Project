@@ -30,4 +30,8 @@ IF I HAVE TIME
 
 -in the modify customer details menu restrict the state to being changed to one of the actual states, so that just any two letters arent acceptable
 -consider adding filters like month to the transaction type filter view
+-in the 7th requirment, when inputting a ssn, see which cc's belong to the customer and if there are more than one, have the user choice which cc to procceed with
+
+
+
 -change format to pages.  have the pages have a common structure and refer to each page by its name/variable like page_zip_menu
