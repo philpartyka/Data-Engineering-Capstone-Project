@@ -10,6 +10,9 @@ pip install prettytable
 credential file has to be updated with user's mysql details
 
 
+challenges:
+-prettytable was dropping leading 0s. thats because the zip codes are stored as ints in the db.  althought zerofill is enabled as a constraint in the db, that only affects how the number is displayed, not how it is stored.  had to pad a 0 in python when pulling the zip code out of the db.
+
 
 
 
@@ -17,16 +20,13 @@ credential file has to be updated with user's mysql details
 To Do List:
 
 MUST
--pretty table is dropping leading 0s from zip codes
-
-
-
 -can i upload credentials file but scramble the login details
 
 
 
 
 IF I HAVE TIME
+- parse prettytables using these functions istead of using json https://legacy.python.org/scripts/ht2html/docutils/parsers/rst/tableparser.py
 
 -in the modify customer details menu restrict the state to being changed to one of the actual states, so that just any two letters arent acceptable
 -consider adding filters like month to the transaction type filter view

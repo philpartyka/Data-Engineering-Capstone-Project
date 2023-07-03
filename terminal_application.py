@@ -1,3 +1,4 @@
+import time
 import re
 import json
 import mysql.connector as msql
@@ -7,6 +8,30 @@ from prettytable import from_db_cursor
 # This file contains our login information for the MySQL server
 import credentials as C
 
+def startup_sequence():
+    print(".")
+    time.sleep(0.5)
+    print("..")
+    time.sleep(0.5)
+    print("Starting up application..")
+    time.sleep(0.8)
+    print("Importing required python libraries")
+    time.sleep(1)
+    print("Libraries fulled loaded")
+    time.sleep(1)
+    print("Checking to see if the stove was left on")
+    time.sleep(1)
+    print("Checking if there are any updates to the application")
+    time.sleep(0.8)
+    print(".")
+    time.sleep(0.4)
+    print("..")
+    time.sleep(0.4)
+    print("JK, there is no update check feature")
+    time.sleep(1)
+    print("Connecting to the database")
+    time.sleep(1)
+    connect_sql()
 
 def connect_sql():
     try:
@@ -23,6 +48,20 @@ def connect_sql():
     except Error as e:
         print('Error while connecting to MySQL',e)
 
+def welcome_title():
+    pad = "        "
+    print("")
+    print(pad + " _____________________________________ ")
+    print(pad + "|                                     |")
+    print(pad + "|                                     |")
+    print(pad + "|                                     |")
+    print(pad + "|  CREDIT CARD APPLI CATION           |")
+    print(pad + "|                                     |")
+    print(pad + "|  EST 07/23                          |")
+    print(pad + "|  PHILIP PARTYKA              BISA   |")
+    print(pad + "|_____________________________________|")
+    print("")
+    
 def instructions():
     print("Please type in your selection and hit Enter. ")
     print("Type \033[33mexit\033[0m to escape the program or to return to the previous menu")
@@ -229,6 +268,10 @@ def branch_full_table(state=None, branch_code=None):
     for row in result:
         # unpacking the row (its a tuple) so that I can modify the individual elements
         code, name, city, state, zip, phone, total, trans = row
+        
+        # padding a leading 0 to the zip code(needs to be converted from int to string)
+        zip = str(zip).rjust(5,"0")
+        
         # below formats the total into a currency format.  The $ is a literal dollar sign.
         # the : indicates the start of the format specification.  The , indicates that 
         # a comma should be used as a thousand separator, and the .2f indicates we
@@ -345,7 +388,10 @@ def cust_details_sql(ssn=None,cc_num_last4=None,cc_num_full=None,l_name=None,cus
     cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
                                    "City","State","Country","Zip Code","Phone Num","Email","Last Updated"])
     for i in result:
-        #had to slice the row to omit the 13th column from being added
+        # need to convert tuple to list in order to change individual elements
+        i = list(i)
+        # padding a leading 0 to the zip code(needs to be converted from int to string)
+        i[9] = str(i[9]).rjust(5,"0")
         cust_details_tb.add_row(i)
     
     return cust_details_tb
@@ -586,6 +632,10 @@ def cust_update_sql(cust_ssn, col, new_val):
         cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
                                     "City","State","Country","Zip Code","Phone Num","Email","Last Updated"])
         for i in result:
+            # need to convert tuple to list in order to change individual elements
+            i = list(i)
+            # padding a leading 0 to the zip code(needs to be converted from int to string)
+            i[9] = str(i[9]).rjust(5,"0")
             #had to slice the row to omit the 13th column from being added
             cust_details_tb.add_row(i)
         
@@ -976,6 +1026,9 @@ def run_modify_cust_details():
             print("")              
 
 def statement_header_format(cust_details_tuple):
+    # padding a leading 0 to the zip code(needs to be converted from int to string)
+    zip = str(cust_details_tuple[0][7]).rjust(5,"0")
+    
     print("")
     print("\033[4mMonthly Statement\033[0m")
     print("")
@@ -986,7 +1039,7 @@ def statement_header_format(cust_details_tuple):
     print(f"Credit Card Number: {cust_details_tuple[0][3]}")
     print(f"Street Address:")
     print(f"{cust_details_tuple[0][4]}")
-    print(f"{cust_details_tuple[0][5]}, {cust_details_tuple[0][6]} {cust_details_tuple[0][7]}")
+    print(f"{cust_details_tuple[0][5]}, {cust_details_tuple[0][6]} {zip}")
     print(f"{cust_details_tuple[0][8]}")
     print(f"Phone Number: {cust_details_tuple[0][9]}")
     print(f"EMail Address: {cust_details_tuple[0][10]}")
@@ -1309,10 +1362,7 @@ def run_trans_in_period():
                     
                     break
                 break
-                        
-            
-        
-    
+                                     
 def run_choice(choice):
     if choice == "1":
         run_zipcode_search()
@@ -1332,7 +1382,6 @@ def run_choice(choice):
         print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
         print("")
     
-
 def app():
     while True:
         instructions()
@@ -1344,13 +1393,7 @@ def app():
         if choice == "exit":
             print("Closing program.  Come back next time.")
             break
-        
-            
-        
-
-
-connect_sql()
-print("              ---")
-print("Welcome to the Credit Card App")
-print("              ---")
+               
+startup_sequence()
+welcome_title()
 app()
