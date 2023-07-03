@@ -1139,7 +1139,113 @@ def run_gen_monthly_statement():
             print("")
 
 def run_trans_in_period():
-    pass
+    while True:
+        print("")
+        print("\033[4mCustomer Transactions Between Two Time Periods\033[0m")
+        instructions()
+        print("Possible selections are highlighted in yellow.")
+        print("")
+        print("\033[33m1\033[0m Enter CC num")
+        print("\033[33m2\033[0m Enter SSN")
+        print("\033[33m3\033[0m Search for Customer")
+        print(" ")
+        menu_selection = input("Your selection: ")
+        
+        if menu_selection == 'exit':
+            print("Returning to previous page")
+            print("")
+            break 
+        elif menu_selection == '1':
+            while True:
+                cc_input = input("Please enter the CC number: ")
+                
+                if cc_input == 'exit':
+                    print("Returning to previous page")
+                    print("")
+                    break 
+                
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                cc_input = re.sub(r"\D", "", cc_input)
+                
+                # need to convert cc_input to a string because int doesnt have a length function
+                if len(str(cc_input)) == 16:
+                    cc_cust_details = cust_details_sql(cc_num_full=cc_input)
+                    if cc_cust_details == 0:
+                        print("There is no customer with the given Credit Card number.")
+                        print("")
+                        continue
+                    # setting this to the same cc variable that i used in the option 3 decision branch so i easily
+                    # pass it into the function later
+                    cust_cc = cc_input
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid CC Num.  Remember CC Nums have 16 digits.")
+                    print("")
+                    continue
+                
+            if cc_input == 'exit':
+                continue    
+        elif menu_selection == '2':
+            while True:
+                ssn_input = input("Please enter the customer's SSN: ")
+
+                if ssn_input == 'exit':
+                    print("Returning to previous page")
+                    print("")
+                    break
+                
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                ssn_input = re.sub(r"\D", "", ssn_input)
+                
+                # need to convert ssn_input to a string because int doesnt have a length function
+                if len(str(ssn_input)) == 9:
+                    ssn_cust_details = cust_details_sql(ssn=ssn_input)
+                    if ssn_cust_details == 0:
+                        print("There is no customer with the given SSN.")
+                        print("")
+                        continue
+                    break
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid SSN.  Remember SSNs have 9 digits.")
+                    print("")
+                    continue
+                
+            if ssn_input == 'exit':
+                continue
+        elif menu_selection == "3":
+            run_cust_details(modify=True)
+            
+            exit_check = exit_from_cust_details
+            if exit_check == 1:
+                continue   
+    
+            # We need to isolate the CC num so we can use it to lookup customers 
+            # To achieve this we use the json library to convert the prettytable
+            # to a json string(its actually a list) and then we extract the dict in that list.  
+            # I needed to remove the Last Updated column because the timestamp data type couldn't
+            # be serialized in json
+            return_results.del_column('Last Updated')
+            json_data = json.loads(return_results.get_json_string())
+            cust_dict = json_data[1]
+            cust_cc = cust_dict['CC Num']   
+            print(f"Proceeding with Credit Card Number: {cust_cc}")
+            print("")
+        else:
+            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")  
+            print("")
+            continue
+        
+        time1 = input("Please enter the start date in YYYYMMDD format: ") 
+        
+        if time1 == 'exit':
+            print("Returning to previous page")
+            print("")
+            continue    
+            
+            
+        
     
 def run_choice(choice):
     if choice == "1":
