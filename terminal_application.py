@@ -315,13 +315,15 @@ def run_branch_filter():
                 print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
                 print("")
 
-def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=None):
+def cust_details_sql(ssn=None,cc_num_last4=None,cc_num_full=None,l_name=None,cust_state=None,zip_code=None):
     # I will alter the sql query based on which search parameter is supplied.  Only one param
     # is supplied at a time so the rest will be None by default.
     if ssn:
         search_param = f"WHERE SSN = {ssn}"
-    elif cc_num:
-        search_param = f"WHERE Credit_card_no LIKE '____________{cc_num}'"
+    elif cc_num_last4:
+        search_param = f"WHERE Credit_card_no LIKE '____________{cc_num_last4}'"
+    elif cc_num_full:
+        search_param = f"WHERE Credit_card_no = {cc_num_full}"
     elif l_name:
         search_param = f"WHERE LAST_NAME = '{l_name}'"
     elif cust_state:
@@ -341,10 +343,10 @@ def cust_details_sql(ssn=None,cc_num=None,l_name=None,cust_state=None,zip_code=N
         return 0
     
     cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
-                                   "City","State","Country","Zip Code","Phone Num","Email"])
+                                   "City","State","Country","Zip Code","Phone Num","Email","Last Updated"])
     for i in result:
         #had to slice the row to omit the 13th column from being added
-        cust_details_tb.add_row(i[:12])
+        cust_details_tb.add_row(i)
     
     return cust_details_tb
 
@@ -410,7 +412,7 @@ def run_cust_details(modify=False):
                             # but ssn_results[1:][0] returns an error when there is only 1 result
                             try: 
                                 ssn_results[1:][0]
-                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only proceed with one customer.")
                             except:
                                 return_results = ssn_results
                                 break_from_function = 1
@@ -432,7 +434,7 @@ def run_cust_details(modify=False):
                 #need to convert ssn_input to a string because int doesnt have a length function
                 if len(str(cc_input)) == 4:
                     #saving the sql query to a variable so we dont have to run it twice
-                    cust_results = cust_details_sql(cc_num=cc_input)
+                    cust_results = cust_details_sql(cc_num_last4=cc_input)
                     if cust_results == 0:
                         print("There is no customer with the given last four CC digits.")
                         print("")
@@ -446,7 +448,7 @@ def run_cust_details(modify=False):
                             # but cust_results[1:][0] returns an error when there is only 1 result
                             try: 
                                 cust_results[1:][0]
-                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only proceed with one customer.")
                             except:
                                 return_results = cust_results
                                 break_from_function = 1
@@ -472,7 +474,7 @@ def run_cust_details(modify=False):
                         # but name_results[1:][0] returns an error when there is only 1 result
                         try: 
                             name_results[1:][0]
-                            print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                            print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only proceed with one customer.")
                         except:
                             return_results = name_results
                             break_from_function = 1
@@ -499,7 +501,7 @@ def run_cust_details(modify=False):
                             # but state_results[1:][0] returns an error when there is only 1 result
                             try: 
                                 state_results[1:][0]
-                                print("\033[31mERROR\033[0m Your selection returns more than one customer. You can only modify one customer at a time.")
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only proceed with one customer.")                            
                             except:
                                 return_results = state_results
                                 break_from_function = 1
@@ -538,7 +540,7 @@ def run_cust_details(modify=False):
                             # but zip_results[1:][0] returns an error when there is only 1 result
                             try: 
                                 zip_results[1:][0]
-                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only modify one customer at a time.")
+                                print("\033[31mERROR\033[0m Your selection returns more than one customer.  You can only proceed with one customer.")
                             except:
                                 return_results = zip_results
                                 break_from_function = 1
@@ -565,7 +567,7 @@ def cust_update_sql(cust_ssn, col, new_val):
     try:
         # setting it this way is advised to prevent sql injection attacks. 
         params = (new_val, cust_ssn)
-        cust_modify_sql =  f"UPDATE cdw_sapp_customer SET {col} = %s WHERE SSN = %s" 
+        cust_modify_sql =  f"UPDATE cdw_sapp_customer SET {col} = %s, LAST_UPDATED = CURRENT_TIMESTAMP WHERE SSN = %s" 
         
         cursor.execute(cust_modify_sql, params) #cursor was assigned in the connect_sql() function
         conn.commit()
@@ -582,10 +584,10 @@ def cust_update_sql(cust_ssn, col, new_val):
         result = cursor.fetchall()          #fetches the results
         
         cust_details_tb = PrettyTable(["SSN","First","Middle","Last","CC Num","Street Address",
-                                    "City","State","Country","Zip Code","Phone Num","Email"])
+                                    "City","State","Country","Zip Code","Phone Num","Email","Last Updated"])
         for i in result:
             #had to slice the row to omit the 13th column from being added
-            cust_details_tb.add_row(i[:12])
+            cust_details_tb.add_row(i)
         
         return cust_details_tb
     except msql.Error as error:
@@ -594,10 +596,17 @@ def cust_update_sql(cust_ssn, col, new_val):
 def run_modify_cust_details():
     # run the same cust details function but with slight tweaks catered to this function
     run_cust_details(modify=True)
+    
+    exit_check = exit_from_cust_details
+    if exit_check == 1:
+        return 
     # We need to isolate the SSN so we can use it to lookup customers when updating their
     # records.  To achieve this we use the json library to convert the prettytable
     # to a json string(its actually a list) and then we extract the dict in that list.  
     # The first item in that dict is the SSN value.
+    # I needed to remove the Last Updated column because the timestamp data type couldn't
+    # be serialized in json
+    return_results.del_column('Last Updated')
     json_data = json.loads(return_results.get_json_string())
     cust_dict = json_data[1]
     cust_ssn = cust_dict['SSN']
@@ -605,9 +614,7 @@ def run_modify_cust_details():
     while True:
         # checks if we backed out of the cust details search, so we can break this loop as well
         # for some reason i can't put exit_from_cust_details directly in the if conditional. 
-        exit_check = exit_from_cust_details
-        if exit_check == 1:
-            break 
+        
                        
         print("Which field would you like to modify?")
         print("")
@@ -967,9 +974,172 @@ def run_modify_cust_details():
         else:
             print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")  
             print("")              
+
+def statement_header_format(cust_details_tuple):
+    print("")
+    print("\033[4mMonthly Statement\033[0m")
+    print("")
+    print("Customer Details:")
+    print(f"First Name: {cust_details_tuple[0][0]}")
+    print(f"Middle Name: {cust_details_tuple[0][1]}")
+    print(f"Last Name: {cust_details_tuple[0][2]}")
+    print(f"Credit Card Number: {cust_details_tuple[0][3]}")
+    print(f"Street Address:")
+    print(f"{cust_details_tuple[0][4]}")
+    print(f"{cust_details_tuple[0][5]}, {cust_details_tuple[0][6]} {cust_details_tuple[0][7]}")
+    print(f"{cust_details_tuple[0][8]}")
+    print(f"Phone Number: {cust_details_tuple[0][9]}")
+    print(f"EMail Address: {cust_details_tuple[0][10]}")
+
+def statement_header_sql(cc_num):
+    try:
+        # setting it this way is advised to prevent sql injection attacks. 
+        params = [cc_num]
+        
+        statement_query = ("SELECT FIRST_NAME, MIDDLE_NAME, LAST_NAME, Credit_card_no, FULL_STREET_ADDRESS, " 
+                        "CUST_CITY, CUST_STATE, CUST_ZIP, CUST_COUNTRY, CUST_PHONE, CUST_EMAIL "
+                        "FROM cdw_sapp_customer "
+                        "WHERE Credit_card_no = %s")
+        
+        cursor.execute(statement_query, params) #cursor was assigned in the connect_sql() function
+        result = cursor.fetchall()            #fetches all the results
+        
+        statement_header = statement_header_format(result)
+        
+        return statement_header
+    except msql.Error as error:
+        return f"\033[31mERROR\033[0m Failed to retrieve customers records: {error}"
+
+def statement_sql(cc_num, year, mon):
+    try:
+        # setting it this way is advised to prevent sql injection attacks. 
+        params = [cc_num]
+        
+        statement_query = ("SELECT TRANSACTION_ID, TIMEID, TRANSACTION_TYPE, TRANSACTION_VALUE "
+                        "FROM cdw_sapp_credit_card "  
+                        f"WHERE CUST_CC_NO = %s AND TIMEID LIKE '{year}%' AND TIMEID LIKE '____{mon}%' "
+                        "ORDER BY TIMEID DESC")
+        
+        cursor.execute(statement_query, params) #cursor was assigned in the connect_sql() function
+        result = cursor.fetchall()            #fetches all the results
+        
+        statement_tb = PrettyTable(["Trans ID","Time (YYYYMMDD)","Type","Amount"])
+        for i in result:
+            #had to slice the row to omit the 13th column from being added
+            statement_tb.add_row(i)
+        
+        cust_details = statement_header_sql(cc_num)
+        
+        return statement_tb, cust_details
+    except msql.Error as error:
+        return f"\033[31mERROR\033[0m Failed to retrieve records: {error}"
+
+def cc_statement_input(cc_input):
+    cc_cust_details = cust_details_sql(cc_num_full=cc_input)
+    if cc_cust_details == 0:
+        print("There is no customer with the given Credit Card number.")
+        print("")
+    else:
+        while True:
+            year_input = input("Please enter a year: ")
+            
+            if year_input == "exit":
+                print("Returning to previous page")
+                print("")
+                break
+            elif bool(re.match(r'^\d{4}$', year_input)):
+                pass 
+            else:
+                print("\033[31mERROR\033[0m You have made an invalid selection. Only 2018 is valid.")
+                print("")
+                continue
+            
+            mon_input = input("Please enter a month (MM format): ")
+            
+            if mon_input == "exit":
+                print("Returning to previous page")
+                print("")
+                break
+            # Regex pattern: "^(0?[1-9]|1[0-2])$".  We need ^ to indicate that we are looking for 
+            # the pattern at the start of a string, not in the middle of it.  Similar reason for the $ 
+            # but for the end of the string.  0?[1-9] matches a single digit from 1-9 with an optional
+            # leading zero.  | is an OR operator.  1[0-2] matches 10, 11, or 12.
+            elif bool(re.match(r"^(0?[1-9]|1[0-2])$", mon_input)):
+                mon_input = mon_input.rjust(2,"0")  #padding a leading zero if single digit
+            else:
+                print("\033[31mERROR\033[0m You have made an invalid selection. Remember, only one or two digits.")
+                print("")
+                continue
+                    
+            statement, cust_details = statement_sql(cc_input,year_input,mon_input)
+            
+            if isinstance(statement, str):
+                print(cust_details)
+                print(statement)
+                print("")
+            else:
+                print(statement)
+            break
+                             
+def run_gen_monthly_statement():
+    while True:     
+        print("")
+        print("\033[4mGenerate Monthly Statement\033[0m")
+        instructions()
+        print("Possible selections are highlighted in yellow.")
+        print("")
+        print("\033[33m1\033[0m Enter CC num")
+        print("\033[33m2\033[0m Search for Customer")
+        print(" ")
+        
+        statement_choice = input("Your selection: ")
+        
+        if statement_choice == "exit":
+            print("Returning to previous page")
+            print("")
+            break 
+        elif statement_choice == "1":
+            while True:
+                cc_input = input("Please enter the credit card number: ")
+                
+                if cc_input == "exit":
+                    print("Returning to previous page")
+                    break
+                # below replaces any non digit characters (\D) with an empty string ""
+                # essentially removing non digit chars
+                cc_input = re.sub(r"\D", "", cc_input)
+                
+                # need to convert cc_input to a string because int doesnt have a length function
+                if len(str(cc_input)) == 16:
+                    cc_statement_input(cc_input)
+                else:
+                    print("\033[31mERROR\033[0m You have entered an invalid CC Num.  Remember CC Nums have 16 digits.")
+                    print("") 
+        elif statement_choice == "2":
+            run_cust_details(modify=True)
+            
+            exit_check = exit_from_cust_details
+            if exit_check == 1:
+                continue   
     
-    
-    
+            # We need to isolate the CC num so we can use it to lookup customers 
+            # To achieve this we use the json library to convert the prettytable
+            # to a json string(its actually a list) and then we extract the dict in that list.  
+            # I needed to remove the Last Updated column because the timestamp data type couldn't
+            # be serialized in json
+            return_results.del_column('Last Updated')
+            json_data = json.loads(return_results.get_json_string())
+            cust_dict = json_data[1]
+            cust_cc = cust_dict['CC Num']   
+            print(f"Proceeding with Credit Card Number: {cust_cc}")
+            print("")
+            cc_statement_input(cust_cc) 
+        else:
+            print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")  
+            print("")
+
+def run_trans_in_period():
+    pass
     
 def run_choice(choice):
     if choice == "1":
@@ -982,6 +1152,10 @@ def run_choice(choice):
         run_cust_details()
     elif choice == "5":
         run_modify_cust_details()
+    elif choice == "6":
+        run_gen_monthly_statement()
+    elif choice == "7":
+        run_trans_in_period()
     else:
         print("\033[31mERROR\033[0m You have made an invalid selection.  Please try again.")
         print("")

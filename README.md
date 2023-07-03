@@ -17,8 +17,6 @@ credential file has to be updated with user's mysql details
 To Do List:
 
 MUST
--change last updated when modifying user
-        -show last modified time for users
 -pretty table is dropping leading 0s from zip codes
 
 
