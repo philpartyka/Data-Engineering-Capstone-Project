@@ -25,7 +25,12 @@ challenges:
 To Do List:
 
 MUST
+
+-instead of pandas, make sure to load api into pyspark df for req 4
+
 -can i upload credentials file but scramble the login details
+
+
 
 
 
