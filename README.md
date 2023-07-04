@@ -26,6 +26,8 @@ MUST
 
 
 IF I HAVE TIME
+- chart of the transaction total value over the categories
+
 - parse prettytables using these functions istead of using json https://legacy.python.org/scripts/ht2html/docutils/parsers/rst/tableparser.py
 
 -in the modify customer details menu restrict the state to being changed to one of the actual states, so that just any two letters arent acceptable
