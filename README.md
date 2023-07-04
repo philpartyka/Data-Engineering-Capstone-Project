@@ -6,6 +6,11 @@ requirements:
 
 pip install mysql-connector-python
 pip install prettytable
+pip install pandas
+pip install folium
+pip install seaborn
+pip install matplotlib
+pip install geopandas
 
 credential file has to be updated with user's mysql details
 
@@ -26,7 +31,7 @@ MUST
 
 
 IF I HAVE TIME
-- chart of the transaction total value over the categories
+- chart of the transaction total value for each of the categories (part 1 of req 3)
 
 - parse prettytables using these functions istead of using json https://legacy.python.org/scripts/ht2html/docutils/parsers/rst/tableparser.py
 
