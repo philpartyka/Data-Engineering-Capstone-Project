@@ -1,2 +1,3 @@
 source_data/full_area_code_dataset.json
 credentials.py
+__pycache__/credentials.cpython-310.pyc
