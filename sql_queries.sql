@@ -90,3 +90,7 @@ FROM cdw_sapp_credit_card
 GROUP BY CUST_SSN
 ORDER BY Total DESC
 LIMIT 10;
+
+SELECT Application_Status 
+FROM cdw_sapp_loan_application
+WHERE Self_employed = "Yes";
