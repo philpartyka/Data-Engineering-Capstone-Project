@@ -4,8 +4,7 @@ SELECT * FROM cdw_sapp_credit_card;
 
 SELECT * FROM cdw_sapp_customer;
 
-SHOW PROCESSLIST;
-KILL 182;
+SELECT * FROM cdw_sapp_loan_application;
 
 SELECT cc.TIMEID, cc.TRANSACTION_VALUE, cc.TRANSACTION_TYPE, cc.CUST_CC_NO, 
 c.FIRST_NAME, c.LAST_NAME,  cc.BRANCH_CODE, cc.TRANSACTION_ID 
