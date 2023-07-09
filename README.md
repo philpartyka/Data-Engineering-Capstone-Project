@@ -1,5 +1,8 @@
-# Data-Engineering-Capstone-Project
-This is a capstone project for the Data Engineering course offered by Per Scholas.
+# Data Engineering Capstone Project
+This is my data engineering capstone project for the boot camp course offered by Per Scholas.  The main goal of this project is to extra credit card transaction, cutomer, branch, and loan data from a dataset, clean it up, load it onto a database, provide analysis on the data, and building a front-end to interact with the data.
+
+### Main objectives
+1. Extract data from 3 provided datasets.  The datasets cover Credit Card Transactions, Bank Branch information, and Customer information.
 
 
 requirements:
