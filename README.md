@@ -36,6 +36,8 @@ MUST
 IF I HAVE TIME
 - add comments to all code
 
+- figure out how to zip big data file
+
 - chart of the transaction total value for each of the categories (part 1 of req 3)
 
 - parse prettytables using these functions istead of using json https://legacy.python.org/scripts/ht2html/docutils/parsers/rst/tableparser.py
@@ -49,3 +51,6 @@ IF I HAVE TIME
 -change format to pages.  have the pages have a common structure and refer to each page by its name/variable like page_zip_menu
 
 -automate and make the entire process into a pipeline
+
+-docker to containerize the entire environment
+
