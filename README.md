@@ -43,7 +43,7 @@ Major Issues:
 * The bank branch data had incomplete zip codes because the leading 0 was dropped from the zip codes.  This wasn't difficult to solve using a spark dataframe.  The issue was that the mapping document (formatting guidelines for how the data was to be transformed and loaded into the db) wanted the zip codes to be stored as an INT data type.  Loading in the zip codes as INTs led to the leading 0s to be dropped again.  Not a big deal since there is an INT ZEROFILL constraint we can use to fill the number with 0s.  The problem is that this constraint doesn't actually changed the number that is stored, just how its displayed, so when we query zip code data from the db we will received incomplete zip codes again.  The best solution to avoid this entire mess would be to store the Zip Codes as strings, but you know, I was just following what I was instructed to do.
 * Customer phone numbers were incomplete (only 7 digits) and there were nearly 50 duplicate phone numbers.  Since the branches' phone numbers all used 123 as an area code, initially, I was going to use that as the area code for the customers' phone numbers but I would still have duplicate numbers in that situation.  It not possible for two unrelated customers in different parts of the country to have the same phone number so I decided to add area codes based on the zip code of the customer.  To accomplish this, I needed a dataset with the area codes corresponding to a zip code, which proved suprisingly difficult to find (for free).  After finally finding a dataset, I thought it would be easy to just add an area code to each customer based on their zip codes but that proved to be false because many zip codes had multiple area codes that could be an option, not to mention the non geographic area zip codes that might be possible.  To solve this issue I cycled through the list of area codes for a specific zip codes so that the area codes would be evenly distributed among the customers that shared the same zip code.  This wasn't easy to accomplish using a spark dataframe, since overwriting a single cell in a spark df is incredible inefficient.  After I finally figured out how to do it, it took over 20 minutes and still wasn't done processing the data for a 950 row dataframe.  I changed it to a pandas dataframe and it took 6 seconds to finish.
 * Customer email addresses also had 24 duplicates.  Since the emails were all formatted as FirstInitialLastName@, I added the middle initial to differentiate them further.  Emails really shouldn't be altered since they only function when written a single way, but since its been established that a lot of this data is made up anyways, then I think we can bend the laws of reality a bit here.
-* 
+
 Minor Issues:
 * The mapping document instructed me to add the Apt No after the street name.  The street names had no leading numbers that would indicate the house number where the customer lives.  Since each customer had an APT NO, I assumed that the APT NO was actually supposed to be the house number so I put it in front of the street name instead.  And since I can't be accussed of unfulfilling my mapping duties I also put the Apt No after the street name, like instructed.  I'll let the postman deal with this mess.
 * The phone numbers for the branches all start with 123.  That's not possible since area codes start from 201 and up.
@@ -52,45 +52,12 @@ Minor Issues:
 
 ### 2 The front-end console application
 
+While the console application wasn't challengeing for my programming abilities, it was challenging due to the all the "paths" I had to account for that the end user could go down.  I had to make sure the end user never got stuck on a section of the application where they had no way to back out. 
+ I also had to make sure data was carried over from one section to another when necessary, also the data had to persist even if the user aborted or caused an error in a section of the application.  The really challenging part was keeping track of all the possible outcomes the end user might end up.  I wish I had outlined it ahead of time instead of tracking it in my head the entire time.  Also, I plan to revisit the code for this application in the future so I could make better use of UDFs to cut down on redundant code.  
 
-
-
-challenges:
--prettytable was dropping leading 0s. thats because the zip codes are stored as ints in the db.  althought zerofill is enabled as a constraint in the db, that only affects how the number is displayed, not how it is stored.  had to pad a 0 in python when pulling the zip code out of the db.
-
-
-
-
-
-To Do List:
-
-MUST
-
--can i upload credentials file but scramble the login details
+ 
 
 
 
 
-
-
-IF I HAVE TIME
-- add comments to all code
-
-- figure out how to zip big data file
-
-- chart of the transaction total value for each of the categories (part 1 of req 3)
-
-- parse prettytables using these functions istead of using json https://legacy.python.org/scripts/ht2html/docutils/parsers/rst/tableparser.py
-
--in the modify customer details menu restrict the state to being changed to one of the actual states, so that just any two letters arent acceptable
--consider adding filters like month to the transaction type filter view
--in the 7th requirment, when inputting a ssn, see which cc's belong to the customer and if there are more than one, have the user choice which cc to procceed with
-
-
-
--change format to pages.  have the pages have a common structure and refer to each page by its name/variable like page_zip_menu
-
--automate and make the entire process into a pipeline
-
--docker to containerize the entire environment
 
