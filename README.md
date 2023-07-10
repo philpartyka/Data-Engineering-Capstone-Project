@@ -5,6 +5,17 @@ This is my data engineering capstone project for the boot camp course offered by
 1. Extract data from 3 provided datasets, clean data, and load into a database.  The datasets cover Credit Card Transactions, Bank Branch information, and Customer information.  Tools used:
    * PySpark for extracting and cleaning
    * MySQL database
+2. Build  front end python console application to pull up and modify data from the db based on front end user parameters.
+   * MySQL connector library
+   * PrettyTable library
+3. Provide visualizations of data based on sample analysis scenarios
+   * Seaborn
+   * MatPlotLib
+   * Folium and GeoPandas
+4. Pull Loan Application data from an API endpoint and store it in the database
+   * PySpark SQL
+   * MySQL database
+5. Provide visualizations based on sample analysis scenarios using data loaded in from step 4 
      
 
 
