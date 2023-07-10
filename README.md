@@ -49,7 +49,7 @@ Minor Issues:
 * While there were 46k+ credit card transactions, all the transactions were evenly distributed between all the categories, timespans, and customers.  This made analysis and visualization almost useless.
 
 
-### 2 The front-end console application
+### 2. The front-end console application
 
 While the console application wasn't challengeing for my programming abilities, it was challenging due to the all the "paths" I had to account for that the end user could go down.  I had to make sure the end user never got stuck on a section of the application where they had no way to back out. 
  I also had to make sure data was carried over from one section to another when necessary, also the data had to persist even if the user aborted or caused an error in a section of the application.  The really challenging part was keeping track of all the possible outcomes the end user might end up.  I wish I had outlined it ahead of time instead of tracking it in my head the entire time.  Also, I plan to revisit the code for this application in the future so I could make better use of UDFs to cut down on redundant code.  
