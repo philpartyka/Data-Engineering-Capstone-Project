@@ -2,5 +2,3 @@ source_data/full_area_code_dataset.json
 to_do_list.txt
 sql_queries.sql
 
-# Ignore all blocks of code that are between the TODO: and ENDTODO: comments
-^IGNORE\s*.+EIGNORE$
