@@ -25,6 +25,7 @@ This is my data engineering capstone project for the boot camp course offered by
 * The requirements.txt file contains all the python libraries needed to run this project in a virtual environment.  I would recommend running the project in a venv in order to avoid any version and installation conflicts.
 * While the requirements.txt files contains that pyspark 3.4 library, you will need to install spark on your system in order for this library to function.
 * The credentials.py file contains the information needed to log into the MySQL db.  These will need to be changed to accomodate your database.
+* I used an area code dataset that was too big of a filesize to upload to this repo but it can be downloaded from here: https://github.com/djbelieny/geoinfo-dataset/blob/master/full_dataset_json.zip
 
 ## Technical Challenges
 
@@ -33,7 +34,10 @@ This may have been one of the worst datasets I have ever seen.  If I was given t
 
 Major Issues:
 * The bank branch data had incomplete zip codes because the leading 0 was dropped from the zip codes.  This wasn't difficult to solve using a spark dataframe.  The issue was that the mapping document (formatting guidelines for how the data was to be transformed and loaded into the db) wanted the zip codes to be stored as an INT data type.  Loading in the zip codes as INTs led to the leading 0s to be dropped again.  Not a big deal since there is an INT ZEROFILL constraint we can use to fill the number with 0s.  The problem is that this constraint doesn't actually changed the number that is stored, just how its displayed, so when we query zip code data from the db we will received incomplete zip codes again.  The best solution to avoid this entire mess would be to store the Zip Codes as strings, but you know, I was just following what I was instructed to do.
+* Customer phone numbers were incomplete (only 7 digits) and there were nearly 50 duplicate phone numbers.  Since the branches' phone numbers all used 123 as an area code, initially, I was going to use that as the area code for the customers' phone numbers but I would still have duplicate numbers in that situation.  It not possible for two unrelated customers in different parts of the country to have the same phone number so I decided to add area codes based on the zip code of the customer.  To accomplish this, I needed a dataset with the area codes corresponding to a zip code, which proved suprisingly difficult to find (for free).  After finally finding a dataset, I thought it would be easy to just add an area code to each customer based on their zip codes but that proved to be false because many zip codes had multiple area codes that could be an option, not to mention the non geographic area zip codes that might be possible.  To solve this issue I cycled through the list of area codes for a specific zip codes so that the area codes would be evenly distributed among the customers that shared the same zip code.  This wasn't easy to accomplish using a spark dataframe, since overwriting a single cell in a spark df is incredible inefficient.  After I finally figured out how to do it, it took over 20 minutes and still wasn't done processing the data for a 950 row dataframe.  I changed it to a pandas dataframe and it took 6 seconds to finish.
 * 
+
+
 Minor Issues:
 * The phone numbers for the branches all start with 123.  That's not possible since area codes start from 201 and up.
 * While there were 46k+ credit card transactions, all the transactions were evenly distributed between all the categories, timespans, and customers.  This made analysis and visualization almost useless.
