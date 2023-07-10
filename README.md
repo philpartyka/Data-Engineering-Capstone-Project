@@ -31,7 +31,13 @@ This is my data engineering capstone project for the boot camp course offered by
 * The source data directory contains the 3 datasets I was suplied with (files preceeded by cdw).  The area_codes.json file contains the cleaned up area code data that I used to generate the area codes for the customer's phone numbers.  The full_area_code_dataset.zip is the full area code dataset in a zipped up form because it was too big to be uploaded to github in its raw state.  The states.geojson file contains the US states geo data for use in the folium data visualization (section 3).
 * The clean data directory contains the datasets after they had been transformed and cleaned in step 1.
 * The cc_db.sql contains the sql script to create and populate the entire MySQL database that I created and loaded during the steps in this project.
-* Credentials.py contains the login information for the MySQL database.
+* Credentials.py contains the login information for the MySQL database.  It isn't included in the repo because it contains sensitive information.  You will have to create your own credentials.py file with this format:
+```
+host_name = xxxxxx (for example, localhost was mine)
+user_name = xxxxxx
+password = xxxxxx
+port = xxxxxx
+```
 
 ## Technical Challenges
 
